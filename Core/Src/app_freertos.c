@@ -539,8 +539,8 @@ __weak void Start_Analog_Task03(void const * argument)
 		 * $PowV=			0-120.00V, 	倍率100		uint16_t
 		 * $ExtHC=			0-100.00%,
 		 * $HCP=			0-65.00Mpa,
-		 * $FcTemp=		0-80.00�?,		倍率100
-		 * $ExtTemp=		0-80.00�?,		倍率100
+		 * $FcTemp=			0-80.00℃,  倍率100
+		 * $ExtTemp=		0-80.00℃,  倍率100
 		 * $ShuntA_C=		0-100.00A,	倍率100
 		 * $ShuntA_V=		0-120.00V,	倍率100
 		 * $ShuntB_C=		0-100.00A,	倍率100

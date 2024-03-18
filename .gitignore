@@ -1,3 +1,9 @@
 /.settings
 /Debug
 /*.launch
+/CMakePresets.json
+/vcpkg-configuration.json
+/build
+/.vscode
+/.vs
+/cmake
