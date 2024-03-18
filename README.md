@@ -1,11 +1,10 @@
-# FCU程序
+# FCU project
 
-## 运行环境
+## env
 
-使用STM32CUBEIDE1.12.1
+STM32CUBEIDE1.12.1
 
-## 版本说明
+## version description
 
-- v1.2.1为初始版本
-- v1.2.2为传感器经过校准的版本，v1.2为能运行的版本
+- v1.2.2 for origin : Sensor calibrated
 
