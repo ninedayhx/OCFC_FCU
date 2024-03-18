@@ -56,7 +56,7 @@ extern DateTime rtc_time;
 AnalogInputs_TypeDef my_analog_inputs;
 PCA9555_IO_Status_t ext_io_status;
 SysControl_TypeDef sysControl;
-DeviceStatus_t Sys_status = DEFAULT_SYS_STATUS;//默认上电状�??
+DeviceStatus_t Sys_status = DEFAULT_SYS_STATUS;//默认上电状态
 DeviceFlags_t Sys_flags = {false, false, false, false, false};
 
 extern I2C_HandleTypeDef hi2c1;
@@ -165,20 +165,20 @@ __weak void Start_Top_Task(void const * argument)
 	FanControl_TypeDef fan_control;
 	PID_Init(&(fan_control.pid), K_P, K_I, K_D, -1.0f, 1.0f, FAN_PWM_MAX_VALUE, -FAN_PWM_MAX_VALUE, 0.1f, 50.0f);
 	/**
-	* 设置温度和负载的阈�??
+	* 设置温度和负载的阈值
 	* 如果温度或负载超过了预设的阈值，
-	* 就会触发PID控制算法，自动增加风扇的转�?�，
+	* 就会触发PID控制算法，自动增加风扇的转速
 	* 以防止温度继续上升或负载过大
 	*/
 	fan_control.temp_threshold = 30.0f;
 	fan_control.load_threshold = 0.0f;
-	// 设置初始风扇转�??
+	// 设置初始风扇转速
 	fan_control.fan_speed = 0;
 
-	//�?�?计时�???
+	//排气阀开阀计时器
 	uint32_t Exhaust_O_start_time = 0;
 	uint32_t Exhaust_O_current_time = 0;
-	//关阀计时�???
+	//排气阀关阀计时器
 	uint32_t Exhaust_C_start_time = 0;
 	uint32_t Exhaust_C_current_time = 0;
 	bool ExhaustFlag = false;
@@ -186,129 +186,26 @@ __weak void Start_Top_Task(void const * argument)
 	osDelay(200);
 	sysControl.Expected_FC_Fan_Enable = 0;
 
-	uint32_t count = HAL_GetTick();//获取系统时间
+	//获取系统时间
+	uint32_t count = HAL_GetTick();
 
-#ifdef DEFAULT_SYS_TWOFC
-	uint8_t analogInputs_count_a = 0;
-	uint8_t analogInputs_count_b = 0;
-	uint8_t a_fanspeed = 0;
-	uint8_t b_fanspeed = 0;
-#else
 	uint8_t analogInputs_count = 0;
-
-#endif
-
-	//内部flash测试--
-	//RS232_1_printf(" read i = %d \r\n",ReadFlash(ADDR_FLASH_SECTOR_5));
-//	uint32_t addr = 0x08070000;
-//	HAL_FLASH_Unlock();
-//	stmflash_erase_sector(addr);
-//	uint16_t status = HAL_FLASH_Program(0x00000002U, addr, 0x01f360b45);
-//	HAL_FLASH_Lock();
-//	uint32_t applength = *(uint32_t *)addr;
-//	RS232_1_printf("Writeflash:%x\r\n",applength);
-//	RS232_1_printf("Readflash:%x\r\n",status);
-	//外部flash测试-----------
-//	uint8_t device_id[3];
-//	uint8_t read_buf[10] = {0};
-//	uint8_t write_buf[10] = {0};
-//	int i;
-//	Read_Jedec_ID((uint8_t *)device_id);
-//	RS232_1_printf("W25Q64 ID 0x%x, 0x%x, 0x%x\r\n", device_id[0], device_id[1], device_id[2]);
-//	/* 为了验证，首先读取要写入地址处的数据 */
-//	RS232_1_printf("-------- read data before write -----------\r\n");
-//	Read_Data(0, read_buf, 10);
-//	for(i = 0; i < 10; i++){
-//	  RS232_1_printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
-//	}
-//	/* 擦除该扇�? */
-//	RS232_1_printf("\r\n-------- erase sector 0 -----------\r\n");
-//	Sector_Erase(0);
-//	/* 再次读数�? */
-//	RS232_1_printf("-------- read data after erase -----------\r\n");
-//	Read_Data(0, read_buf, 10);
-//	for(i = 0; i < 10; i++){
-//	  RS232_1_printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
-//	}
-//	/* 写数�?1，擦除扇区后的写�? */
-//	RS232_1_printf("\r\n-------- write data 11111 -----------\r\n");
-//	for(i = 0; i < 10; i++){
-//	write_buf[i] = i;
-//	}
-//	Page_Write(0, write_buf, 10);
-//	/* 再次读数�? */
-//	RS232_1_printf("-------- read data after write -----------\r\n");
-//	Read_Data(0, read_buf, 10);
-//	for(i = 0; i < 10; i++){
-//	  RS232_1_printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
-//	}
-//
-//	//	Sector_Erase(0);
-//	/* 写数�?2，未擦除连续写入，观察未擦除能否写入 */
-//	RS232_1_printf("\r\n-------- write data 22222 -----------\r\n");
-//	for(i = 0; i < 10; i++){
-//	write_buf[i] = i*16;
-//	}
-//	Page_Write(0, write_buf, 10);
-//
-//	/* 再次读数�? */
-//	RS232_1_printf("-------- read data after write -----------\r\n");
-//	Read_Data(0, read_buf, 10);
-//	for(i = 0; i < 10; i++){
-//	  RS232_1_printf("[0x%08x]:0x%02x\r\n", i, *(read_buf+i));
-//	}
 
 	while(true)
 	{
-
+		// 循环接收RS232的信息，并执行对应动作
 		process_RS232_uart1_command();
 		osDelay(20);
-		// 更新风扇控制�???
+		// 更新风扇控制律
 		//FanControl_Update(&fan_control, my_analog_inputs.FC_Internal_Temperature.Current_Val, 0);
 
-
-		//RS232_1_printf("$Tick: %d\n", HAL_GetTick());
-		//排气�???控制
-
+		// 设置散热风扇使能标志位，注意，在此处仅仅只设置了标志位，真正的使能在另外一个线程中
+		// 由于在另外一个线程中，所以可以认为，此处设置了标志位，马上在另外一个线程中执行动作
 		sysControl.Expected_Heatsink_Fan_Enable = true;
 
-		//FCU状�?�机
+		//FCU状态机
 		switch(Sys_status) {
 			case DEVICE_STOPPED://系统停机
-#ifdef DEFAULT_SYS_TWOFC
-				/*----------------双堆停机流程-------------------*/
-				//如果系统正在运行,进入以下停机流程
-				if(Sys_flags.device_started){
-
-					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
-					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
-					RS232_1_printf("TwoFC_System is shutting down! Please wait.....\n");
-
-					//2.关闭主DCDC
-					sysControl.Expected_DCDC_Enable = false;
-					osDelay(1000);
-					//2.关闭氢气进气�???
-					sysControl.Expected_Hydrogen_Inlet_Valve_Enable = false;
-					osDelay(2000);
-					//3.风扇转�?�缓减到0
-					while(sysControl.Expected_FC_Fan_Speed > 0){
-						sysControl.Expected_FC_Fan_Speed --;
-						osDelay(100);
-					}
-					//3.关闭主风扇电�???
-					sysControl.Expected_FC_Fan_Enable = false;
-					//4.关闭电堆输出接触�???
-					sysControl.Expected_Contactor_Fc_Enable = false;
-					sysControl.Expected_Contactor_Load_Enable = false;
-					//系统状�?�标志位清零
-					Sys_flags.device_started = false;
-
-					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
-					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
-					RS232_1_printf("TwoFC_System has shut down successfully.\n");
-				}
-
-#else
 				/*----------------单堆停机流程-------------------*/
 				//如果系统正在运行,进入以下停机流程
 				if(Sys_flags.device_started){
@@ -317,195 +214,117 @@ __weak void Start_Top_Task(void const * argument)
 					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
 					RS232_1_printf("System is shutting down! Please wait.....\n");
 
-					//1.关闭终端负载接触�???
+					// 1.设置总输出接触器使能标志为关闭，即关闭系统对外输出，但此处只更新标志，真正的使能在另外一个线程中
+					// 由于是在另外一个线程中，所以可以认为进入osdelay函数以后，将进入另外一个线程，马上执行动作
 					sysControl.Expected_Contactor_Load_Enable = false;
 					osDelay(3000);
-					//2.关闭主DCDC
+					//2.设置输出DCDC标志位为关闭
 					sysControl.Expected_DCDC_Enable = false;
 					osDelay(1000);
-					//2.关闭氢气进气�???
+					//2.设置氢气进气阀为关闭状态
 					sysControl.Expected_Hydrogen_Inlet_Valve_Enable = false;
 					osDelay(2000);
-					//3.风扇转�?�缓减到0
+					//3.风扇转速缓减到0
 					while(sysControl.Expected_FC_Fan_Speed > 0){
 						sysControl.Expected_FC_Fan_Speed --;
 						osDelay(100);
 					}
-					//3.关闭主风扇电�???
+					//3.设置主风扇电源标志位为关闭
 					sysControl.Expected_FC_Fan_Enable = false;
-					//4.关闭电堆输出接触�???
+					//4.关闭电堆输出接触器
 					sysControl.Expected_Contactor_Fc_Enable = false;
-					//系统状�?�标志位清零
+					//5.设置系统运行状态为关闭
 					Sys_flags.device_started = false;
 
 					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
 					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
 					RS232_1_printf("System has shut down successfully.\n");
 				}
-#endif
-
-
-				break;
+			break;
 
 			case DEVICE_RUNNING://系统启动
-#ifdef DEFAULT_SYS_TWOFC
-				/*-----------------双堆启动流程-----------------*/
-				//如果系统未启�?,进入以下双堆启动流程
-				if(!Sys_flags.device_started){
-
-					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
-					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
-
-					RS232_1_printf("TwoFC_System is starting up! Please wait.....\n");
-					//1.�?启主风扇电源
-					sysControl.Expected_FC_Fan_Enable = true;
-					osDelay(1000);
-					sysControl.Expected_FC_Fan_Speed = 99;//风扇转�??
-					osDelay(500);
-					//2.�?启氢气进气阀
-					sysControl.Expected_Hydrogen_Inlet_Valve_Enable = true;
-					osDelay(1000);
-					//3.�?启电堆输出接触器
-					sysControl.Expected_Contactor_Fc_Enable = true;
-					osDelay(300);
-					sysControl.Expected_Contactor_Load_Enable = true;
-					osDelay(700);
-					//4.�?启主DCDC
-					sysControl.Expected_DCDC_Enable = true;
-					osDelay(1000);
-					//6.
-					//设置系统状�?�标志位 已启�?
-					Sys_flags.device_started = true;
-
-					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
-					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
-					RS232_1_printf("TwoFC_System has started successfully.\n");
-				}
-#else
 				/*-----------------单堆启动流程-----------------*/
-				//如果系统未启�?,进入以下单堆启动流程
+				//如果系统未启动,进入以下单堆启动流程
 				if(!Sys_flags.device_started){
 
 					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
 					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
 
 					RS232_1_printf("System is starting up! Please wait.....\n");
-					//1.�???启主风扇电源
+					//1.散热风扇电源使能
 					sysControl.Expected_FC_Fan_Enable = true;
 					osDelay(1000);
-					sysControl.Expected_FC_Fan_Speed = 99;//风扇�???�???
+					//  散热风扇转速设置为99
+					sysControl.Expected_FC_Fan_Speed = 99;
 					osDelay(500);
-					//2.�???启氢气进气阀
+					//2.氢气进气阀使能
 					sysControl.Expected_Hydrogen_Inlet_Valve_Enable = true;
 					osDelay(1000);
-					//3.�???启电堆输出接触器
+					//3.电堆输出接触器使能
 					sysControl.Expected_Contactor_Fc_Enable = true;
 					osDelay(1000);
-					//4.�???启主DCDC
+					//4.输出DCDC使能
 					sysControl.Expected_DCDC_Enable = true;
 					osDelay(1000);
-					//5.�???启终端负载接触器 对外输出
+					//5.总输出接触器使能，开始对外输出
 					sysControl.Expected_Contactor_Load_Enable = true;
-					//6.
-					//设置系统状�?�标志位 已启�???
+					//6.设置系统运行状态为启动
 					Sys_flags.device_started = true;
 
 					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
 					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
 					RS232_1_printf("System has started successfully.\n");
 				}
-#endif
 
-				/*---------------主风扇动态控�???---------------*/
-				//PID设置目标�???
-				//fan_control.pid.setpoint = my_analog_inputs.FC_External_Temperature.Current_Val;
-				//FanControl_Update(&fan_control, my_analog_inputs.FC_Internal_Temperature.Current_Val);
-				//RS232_1_printf("$Pid=%f\r\n",PID_Update(&(fan_control.pid), my_analog_inputs.FC_Internal_Temperature.Current_Val));
-				//非阻塞控制排气阀延时通断
-				if(!ExhaustFlag){//如果排气�???是关闭状�???
-				  Exhaust_O_start_time = HAL_GetTick();//�?启排气阀 获取当前系统时间
-				  if ((Exhaust_O_start_time - Exhaust_O_current_time) >= FC_EXHAUST_PERIED) {
-					  sysControl.Expected_Hydrogen_Exhaust_Valve_Enable = true;
-					  Exhaust_O_current_time = Exhaust_O_start_time;//同步到系统时�???
-					  Exhaust_C_current_time = Exhaust_O_current_time;
-					  ExhaustFlag = true;
-					  AnimationPlayFrame(1,7,DISPLAY_ICON_G);
-				  }
+				// 非阻塞控制排气阀延时通断，即通过计时来开关
+				// 如果排气阀是关闭状态
+				if(!ExhaustFlag){
+					Exhaust_O_start_time = HAL_GetTick();// 获取当前系统时间，统计的是已经关阀的时间
+					// 如果排气阀关闭时间超过了排气周期
+					if ((Exhaust_O_start_time - Exhaust_O_current_time) >= FC_EXHAUST_PERIED) {
+						// 排气阀打开
+						sysControl.Expected_Hydrogen_Exhaust_Valve_Enable = true;
+						// 开始对开阀时间进行计时
+						Exhaust_O_current_time = Exhaust_O_start_time;
+						Exhaust_C_current_time = Exhaust_O_current_time;
+						ExhaustFlag = true;
+						// 显示在图形界面 useless
+						//AnimationPlayFrame(1,7,DISPLAY_ICON_G);
+					}
+				// 如果排气阀是开启状态
 				}else{
-				  Exhaust_C_start_time =  HAL_GetTick();//关闭排气�? 获取当前系统时间
-				  if ((Exhaust_C_start_time - Exhaust_C_current_time) >= FC_EXHAUST_TIME){
-					  sysControl.Expected_Hydrogen_Exhaust_Valve_Enable = false;
-					  Exhaust_C_current_time = Exhaust_C_start_time;
-					  ExhaustFlag = false;
-					  AnimationPlayFrame(1,7,DISPLAY_ICON_Y);
-				  }
+					Exhaust_C_start_time =  HAL_GetTick();// 获取当前系统时间，统计的是已经开阀的时间
+					// 如果开阀时间超过了开阀时长
+					if ((Exhaust_C_start_time - Exhaust_C_current_time) >= FC_EXHAUST_TIME){
+						// 排气阀关闭
+						sysControl.Expected_Hydrogen_Exhaust_Valve_Enable = false;
+						// 开始对关阀时间进行计时
+						Exhaust_C_current_time = Exhaust_C_start_time;
+						ExhaustFlag = false;
+						//AnimationPlayFrame(1,7,DISPLAY_ICON_Y);
+					}
 				}
-#ifdef DEFAULT_SYS_TWOFC
-				//--------------------------双堆保护策略-------------------------------
-				if(count + 200 <= HAL_GetTick())
-				{	//燃料电池电压低于FC_LOLO_V，或者电堆温度超过FC_HIHI_TEMP
-					//关闭对外负载接触�?
-					if			(my_analog_inputs.FC_Internal_Temperature.Current_Val >= FC_HIHI_TEMP){
-						sysControl.Expected_Contactor_Fc_Enable = false;//堆A温度超过FC_HIHI_TEMP关闭堆A输出
-					}else if	(my_analog_inputs.FC_External_Temperature.Current_Val >= FC_HIHI_TEMP){
-						sysControl.Expected_Contactor_Load_Enable = false;//堆B温度超过FC_HIHI_TEMP关闭堆B输出
-					}
-					else if(my_analog_inputs.Shunt_A_Voltage.Current_Val <= A_FC_LOLO_V){
-						analogInputs_count_a += 1;
-						if(analogInputs_count_a >= 20){
-							sysControl.Expected_Contactor_Fc_Enable = false;
-							analogInputs_count_a = 0;
-						}
-					}else if(my_analog_inputs.Shunt_B_Voltage.Current_Val <= B_FC_LOLO_V){
-						analogInputs_count_b += 1;
-						if(analogInputs_count_b >= 20){
-							sysControl.Expected_Contactor_Load_Enable = false;
-							analogInputs_count_b = 0;
-						}
-					}
-					else{
-						sysControl.Expected_Contactor_Fc_Enable =true;
-						osDelay(10);
-						sysControl.Expected_Contactor_Load_Enable = true;
-					}
 
-					//风扇转�?�控�?  a>b?a:b
-					a_fanspeed = calculateFanSpeed(
-						my_analog_inputs.FC_Internal_Temperature.Current_Val,
-						my_analog_inputs.Shunt_A_Power.Current_Val);
-					b_fanspeed = calculateFanSpeed(
-						my_analog_inputs.FC_Internal_Temperature.Current_Val,
-						my_analog_inputs.Shunt_B_Power.Current_Val);
-					if(a_fanspeed >= b_fanspeed){
-						sysControl.Expected_FC_Fan_Speed = a_fanspeed;
-					}else{
-						sysControl.Expected_FC_Fan_Speed = b_fanspeed;
-					}
-					//sysControl.Expected_FC_Fan_Speed = a_fanspeed > b_fanspeed ? a_fanspeed : b_fanspeed;
-
-					count = HAL_GetTick();
-				}
-#else
-				//--------------------------单堆保护策略-------------------------------
+				//--------------------------单堆保护及风扇转速控制策略-------------------------------//
+				// 循环检测电堆运行状态，不对则进行停机
+				// 检测时间为 200ms 检测一次
 				if(count + 200 <= HAL_GetTick())
-				{	//燃料电池电压低于FC_LOLO_V，或者电堆温度超过FC_HIHI_TEMP
-					//关闭对外负载接触�?
+				{
+					//燃料电池电压低于FC_LOLO_V，或者电堆温度超过FC_HIHI_TEMP
+					//关闭总输出接触器
 					if(my_analog_inputs.FC_Internal_Temperature.Current_Val >= FC_HIHI_TEMP)
 					{
 						sysControl.Expected_Contactor_Fc_Enable = false;
 					}
 					else if(my_analog_inputs.Shunt_A_Voltage.Current_Val <= FC_LOLO_V)
 					{
-
+						// 如果采集次数大于20次就认为电压低于保护值，则触发保护
 						analogInputs_count += 1;
-
 						if(analogInputs_count >= 20)
 						{
 							sysControl.Expected_Contactor_Fc_Enable = false;
 							analogInputs_count = 0;
 						}
-
-						//sysControl.Expected_Contactor_Fc_Enable =false;
 					}
 					else
 					{
@@ -513,97 +332,93 @@ __weak void Start_Top_Task(void const * argument)
 						sysControl.Expected_Contactor_Load_Enable = true;
 					}
 
-					//风扇转�?�控�?
+					// 每隔0.2s对散热风扇进行转速控制，默认策略为查表法
 					sysControl.Expected_FC_Fan_Speed = calculateFanSpeed(
 						my_analog_inputs.FC_Internal_Temperature.Current_Val,
 						my_analog_inputs.Shunt_B_Power.Current_Val);
 
 					count = HAL_GetTick();
 				}
-#endif
-
 				break;
 
 			case DEVICE_STANDBY://系统待机
 				RS232_1_printf("Device is in standby mode\n");
-
 				break;
 
 			case DEVICE_ERROR://系统错误
 				RS232_1_printf("Device is in error state\n");
-
 				break;
 
 			case DEVICE_FAULT://系统故障
 				RS232_1_printf("Device is in fault state\n");
-
 				break;
 
-			default:
-				//未知设备状�??
+			default://未知设备状状态
 				RS232_1_printf("Unknown device status\n");
 				break;
 		}
-
-		//sysControl.Expected_FC_Fan_Speed = sysControl.Expected_FC_Fan_Speed - PID_Update(&(fan_control.pid), my_analog_inputs.FC_Internal_Temperature.Current_Val);
-		//	  for(uint16_t i = 0; i < 4096 ; i++){
-		//		  RS232_1_printf("$Shunt:D=%d,C=%.2f\r\n",i,convert_adc_to_current(i, 3.3, 75));
-		//		  osDelay(10);
-		//	  }
-		//sysControl.Expected_FC_Fan_Speed = (sysControl.Expected_FC_Fan_Speed + 1) % 101;
-		//	  FC_Fan_Close;
-		//	  sysControl.Expected_FC_Fan_Enable = 0;
-		//	  osDelay(1200);
-		//	  FC_Fan_Open;
-		//	  sysControl.Expected_FC_Fan_Enable = 1;
-		//	  sysControl.Expected_FC_Fan_Speed = 12;
-		//	  osDelay(2000);
 	}
   /* USER CODE END Start_Top_Task */
 }
 
 /* USER CODE BEGIN Header_Start_ActiveExtIO_Task02 */
 /**
-* @brief Function implementing the ActiveExtIO_Tas thread.
+* @brief 外部iO控制线程，在此线程中，实时处理在顶层任务中，设置的标志位，执行标志位对应动作
 * @param argument: Not used
 * @retval None
 */
 /* USER CODE END Header_Start_ActiveExtIO_Task02 */
 __weak void Start_ActiveExtIO_Task02(void const * argument)
 {
-  /* USER CODE BEGIN Start_ActiveExtIO_Task02 */
-	uint8_t pca9555_device_address = PCA9555_Get_Device_Address(PCA9555_A2, PCA9555_A1, PCA9555_A0, 0); // 获取PCA9555的设备地�???
+	/* USER CODE BEGIN Start_ActiveExtIO_Task02 */
+
+	// 获取PCA9555的设备地址
+	uint8_t pca9555_device_address = PCA9555_Get_Device_Address(PCA9555_A2, PCA9555_A1, PCA9555_A0, 0);
+
 	for(uint8_t i = 0 ; i < 3 ; i++ ){
-		PCA9555_Init(&hi2c1, pca9555_device_address); // 初始化PCA9555
-		PCA9555_Set_IO_Mode(&hi2c1, pca9555_device_address, 0x0080); // 设置IO口模�???,Port0是输出模式，Port1是输入模�???
+		// 初始化PCA9555
+		PCA9555_Init(&hi2c1, pca9555_device_address);
+		// 设置IO口模式 ,Port0是输出模式，Port1是输入模式
+		PCA9555_Set_IO_Mode(&hi2c1, pca9555_device_address, 0x0080);
 		osDelay(50);
 		PCA9555_Write_IO_State(&hi2c1, pca9555_device_address, 0x0F);
 	}
 	ext_io_status.pca9555_current_state = 0x0F;
 	ext_io_status.pca9555_expected_state = 0x0F;
 
-	uint8_t Current_FC_Fan_Speed = sysControl.Expected_FC_Fan_Speed;										//当前�??? FC主风扇转�??? PWM 占空�??? 0-100%
-	bool Current_FC_Fan_Enable = sysControl.Expected_FC_Fan_Enable;										//当前�??? FC主风扇使�???
-	bool Current_DCDC_Enable = sysControl.Expected_DCDC_Enable;												//当前�??? DCDC使能
-	bool Current_Heatsink_Fan_Enable = sysControl.Expected_Heatsink_Fan_Enable;							//当前�??? FCU散热风扇使能
-	bool Current_Hydrogen_Inlet_Valve_Enable = sysControl.Expected_Hydrogen_Inlet_Valve_Enable;		//当前�??? 氢气进气�???使能
-	bool Current_Hydrogen_Exhaust_Valve_Enable = sysControl.Expected_Hydrogen_Exhaust_Valve_Enable;	//当前�??? 氢气排气�???使能
-	bool Current_Contactor_Fc_Enable = sysControl.Expected_Contactor_Fc_Enable;							//当前�??? 燃料电池接触器A使能
-	bool Current_Contactor_Load_Enable = sysControl.Expected_Contactor_Load_Enable;						//当前�??? 终端负载接触器B使能
+	// 将系统控制状态同步到设置变量中
+
+	// 散热风扇PWM占空比 0-100%
+	uint8_t Current_FC_Fan_Speed = sysControl.Expected_FC_Fan_Speed;
+	// 散热风扇使能状态
+	bool Current_FC_Fan_Enable = sysControl.Expected_FC_Fan_Enable;
+	// 当前总输出DCDC使能状态
+	bool Current_DCDC_Enable = sysControl.Expected_DCDC_Enable;
+	// DCDC散热风扇使能状态
+	bool Current_Heatsink_Fan_Enable = sysControl.Expected_Heatsink_Fan_Enable;
+	// 氢气进气阀工作状态
+	bool Current_Hydrogen_Inlet_Valve_Enable = sysControl.Expected_Hydrogen_Inlet_Valve_Enable;
+	// 排气阀工作状态
+	bool Current_Hydrogen_Exhaust_Valve_Enable = sysControl.Expected_Hydrogen_Exhaust_Valve_Enable;
+	// 电堆输出接触器使能状态
+	bool Current_Contactor_Fc_Enable = sysControl.Expected_Contactor_Fc_Enable;
+	// 总输出接触器使能状态
+	bool Current_Contactor_Load_Enable = sysControl.Expected_Contactor_Load_Enable;
 
 	FC_Fan_Close;
 	__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, htim4.Init.Period - 10);
 
 	/* Infinite loop */
 	while(true){
-		//主风扇转速状态更�???
+		// 散热风扇转速状态更新
 		if(sysControl.Expected_FC_Fan_Speed != Current_FC_Fan_Speed){
-			if(sysControl.Expected_FC_Fan_Speed > 99)sysControl.Expected_FC_Fan_Speed = 99;
-			//将占空比取反,经过光�?�再翻转为正占空�???(定时器周期减去正占空比的值，即为负占空比值�??)
+			if(sysControl.Expected_FC_Fan_Speed > 99) sysControl.Expected_FC_Fan_Speed = 99;
+			// 将占空比取反,经过光耦再翻转为正占空比(定时器周期减去正占空比的值，即为负占空比值)
 			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, htim4.Init.Period - map_0_to_100_to_12_to_100(sysControl.Expected_FC_Fan_Speed));
 			Current_FC_Fan_Speed = sysControl.Expected_FC_Fan_Speed;
 		}
-		//主风扇使能状态更�???
+		// 散热风扇使能状态更新
+		// 如果上次风扇运行状态与当前设置状态不一致，即风扇运行状态发生了改变，则对风扇状态进行更新
 		if(sysControl.Expected_FC_Fan_Enable != Current_FC_Fan_Enable){
 			if(sysControl.Expected_FC_Fan_Enable){
 				FC_Fan_Open;
@@ -613,7 +428,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_FC_Fan_Enable = sysControl.Expected_FC_Fan_Enable;
 			}
 		}
-		//DCDC使能状�?�更�???
+		// 输出DCDC使能状态更新
 		if(sysControl.Expected_DCDC_Enable != Current_DCDC_Enable){
 			if(sysControl.Expected_DCDC_Enable){
 				DCDC_Open;
@@ -623,7 +438,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_DCDC_Enable = sysControl.Expected_DCDC_Enable;
 			}
 		}
-		//辅助风扇状�?�更�???
+		// DCDC散热风扇使能状态更新
 		if(sysControl.Expected_Heatsink_Fan_Enable != Current_Heatsink_Fan_Enable){
 			if(sysControl.Expected_Heatsink_Fan_Enable){
 				Heatsink_Fan_Open;
@@ -633,7 +448,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_Heatsink_Fan_Enable = sysControl.Expected_Heatsink_Fan_Enable;
 			}
 		}
-		//氢气进气�???状�?�更�???
+		// 氢气进气阀使能状态更新
 		if(sysControl.Expected_Hydrogen_Inlet_Valve_Enable != Current_Hydrogen_Inlet_Valve_Enable){
 			if(sysControl.Expected_Hydrogen_Inlet_Valve_Enable){
 				Hydrogen_Inlet_Valve_Open;
@@ -643,7 +458,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_Hydrogen_Inlet_Valve_Enable = sysControl.Expected_Hydrogen_Inlet_Valve_Enable;
 			}
 		}
-		//氢气排气�???状�?�更�???
+		// 氢气排气阀使能状态更新
 		if(sysControl.Expected_Hydrogen_Exhaust_Valve_Enable != Current_Hydrogen_Exhaust_Valve_Enable){
 			if(sysControl.Expected_Hydrogen_Exhaust_Valve_Enable){
 				Hydrogen_Exhaust_Valve_Open;
@@ -653,7 +468,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_Hydrogen_Exhaust_Valve_Enable = sysControl.Expected_Hydrogen_Exhaust_Valve_Enable;
 			}
 		}
-		//燃料电池输出端接触器状�?�更�???
+		// 电堆输出端接触器使能状态更新
 		if(sysControl.Expected_Contactor_Fc_Enable != Current_Contactor_Fc_Enable){
 			if(sysControl.Expected_Contactor_Fc_Enable){
 				Contactor_Fc_Open;
@@ -663,7 +478,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_Contactor_Fc_Enable = sysControl.Expected_Contactor_Fc_Enable;
 			}
 		}
-		//终端负载接触器状态更�???
+		// 总输出接触器使能状态更新
 		if(sysControl.Expected_Contactor_Load_Enable != Current_Contactor_Load_Enable){
 			if(sysControl.Expected_Contactor_Load_Enable){
 				Contactor_Load_Open;
@@ -673,7 +488,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 				Current_Contactor_Load_Enable = sysControl.Expected_Contactor_Load_Enable;
 			}
 		}
-		//Pca9555输出管脚状�?�更�???
+		// Pca9555输出管脚使能状态更新
 		if(ext_io_status.pca9555_current_state != ext_io_status.pca9555_expected_state){
 			PCA9555_Write_IO_State(&hi2c1, pca9555_device_address, ext_io_status.pca9555_expected_state);
 			ext_io_status.pca9555_current_state = ext_io_status.pca9555_expected_state;
@@ -685,7 +500,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 
 /* USER CODE BEGIN Header_Start_Analog_Task03 */
 /**
-* @brief Function implementing the Analog_Task03 thread.
+* @brief ADC 数据采集线程
 * @param argument: Not used
 * @retval None
 */
@@ -695,75 +510,76 @@ __weak void Start_Analog_Task03(void const * argument)
   /* USER CODE BEGIN Start_Analog_Task03 */
 	uint32_t count = HAL_GetTick();//获取系统时间
 
-	resetFlowMeter();//流量计累计清�??
+	//resetFlowMeter();//流量计累计
   /* Infinite loop */
-  while(true)
-  {
-	  // 读取�?有AD通道AD�?
-	  read_all_adc1_values(my_analog_inputs.adc1_values, 5);
-	  read_all_adc2_values(my_analog_inputs.adc2_values, 4);
-	  //AD值转换为物理�?
-	  my_analog_inputs.Power_Voltage.Current_Val = convert_adc_to_voltage(my_analog_inputs.adc1_values[0], 3.262, 0.022);//电压转换
-	  my_analog_inputs.External_Hydrogen_Concentration.Current_Val = my_analog_inputs.adc1_values[1] /40.96;//浓度ppm
-	  my_analog_inputs.Hydrogen_Cylinder_Pressure.Current_Val = (( my_analog_inputs.adc1_values[2] * 0.001221) - 0.5 ) * 12.5 ;//气压转换
-	  my_analog_inputs.FC_Internal_Temperature.Current_Val = Get_Tempture(my_analog_inputs.adc1_values[3],10000,10020); //堆内温度转换
-	  my_analog_inputs.FC_External_Temperature.Current_Val = Get_Tempture(my_analog_inputs.adc1_values[4],10000,10020); //堆外
-	  my_analog_inputs.Shunt_A_Current.Current_Val = convert_adc_to_current(my_analog_inputs.adc2_values[0], 3.264, 75);// shunt A 电堆输出
-	  my_analog_inputs.Shunt_A_Voltage.Current_Val = convert_adc_to_voltage(my_analog_inputs.adc2_values[1], 3.262, 0.0214);
-	  my_analog_inputs.Shunt_B_Current.Current_Val = convert_adc_to_current(my_analog_inputs.adc2_values[2], 3.264, 75); // shunt B 负载输出
-	  my_analog_inputs.Shunt_B_Voltage.Current_Val = convert_adc_to_voltage(my_analog_inputs.adc2_values[3], 3.262, 0.0213);
-	  //实时功率与电能计转换
-	  my_analog_inputs.Shunt_A_Power.Current_Val = power_calculation(my_analog_inputs.Shunt_A_Voltage.Current_Val , my_analog_inputs.Shunt_A_Current.Current_Val);
-	  my_analog_inputs.Shunt_A_Total_Energy.Current_Val += energy_calculation(my_analog_inputs.Shunt_A_Power.Current_Val , SAMPLING_INTERVAL);
-	  my_analog_inputs.Shunt_B_Power.Current_Val = power_calculation(my_analog_inputs.Shunt_B_Voltage.Current_Val , my_analog_inputs.Shunt_B_Current.Current_Val);
-	  my_analog_inputs.Shunt_B_Total_Energy.Current_Val += energy_calculation(my_analog_inputs.Shunt_B_Power.Current_Val , SAMPLING_INTERVAL);
+	while(true)
+	{
+		// 读取所有AD通道AD值
+		read_all_adc1_values(my_analog_inputs.adc1_values, 5);
+		read_all_adc2_values(my_analog_inputs.adc2_values, 4);
+		// AD值转换为物理值
+		my_analog_inputs.Power_Voltage.Current_Val = convert_adc_to_voltage(my_analog_inputs.adc1_values[0], 3.262, 0.022);			//电压转换
+		my_analog_inputs.External_Hydrogen_Concentration.Current_Val = my_analog_inputs.adc1_values[1] /40.96;						//浓度ppm
+		my_analog_inputs.Hydrogen_Cylinder_Pressure.Current_Val = (( my_analog_inputs.adc1_values[2] * 0.001221) - 0.5 ) * 12.5 ;	//气压转换
+		my_analog_inputs.FC_Internal_Temperature.Current_Val = Get_Tempture(my_analog_inputs.adc1_values[3],10000,10020); 			//堆内温度转换
+		my_analog_inputs.FC_External_Temperature.Current_Val = Get_Tempture(my_analog_inputs.adc1_values[4],10000,10020); 			//堆外
+		my_analog_inputs.Shunt_A_Current.Current_Val = convert_adc_to_current(my_analog_inputs.adc2_values[0], 3.264, 75);			// shunt A 电堆输出
+		my_analog_inputs.Shunt_A_Voltage.Current_Val = convert_adc_to_voltage(my_analog_inputs.adc2_values[1], 3.262, 0.0214);
+		my_analog_inputs.Shunt_B_Current.Current_Val = convert_adc_to_current(my_analog_inputs.adc2_values[2], 3.264, 75); 			// shunt B 负载输出
+		my_analog_inputs.Shunt_B_Voltage.Current_Val = convert_adc_to_voltage(my_analog_inputs.adc2_values[3], 3.262, 0.0213);
 
-#ifdef RS485_FLOWMETER
-	  if(count + DELAY_TIME <= HAL_GetTick()){
-		  queryFlowMeter();//获取流量计瞬时与累计流量
-		  count = HAL_GetTick();
-	  }
-#endif
+		//实时功率与电能计转换
+		my_analog_inputs.Shunt_A_Power.Current_Val = power_calculation(my_analog_inputs.Shunt_A_Voltage.Current_Val , my_analog_inputs.Shunt_A_Current.Current_Val);
+		my_analog_inputs.Shunt_A_Total_Energy.Current_Val += energy_calculation(my_analog_inputs.Shunt_A_Power.Current_Val , SAMPLING_INTERVAL);
+		my_analog_inputs.Shunt_B_Power.Current_Val = power_calculation(my_analog_inputs.Shunt_B_Voltage.Current_Val , my_analog_inputs.Shunt_B_Current.Current_Val);
+		my_analog_inputs.Shunt_B_Total_Energy.Current_Val += energy_calculation(my_analog_inputs.Shunt_B_Power.Current_Val , SAMPLING_INTERVAL);
+
+		/**
+		 * 采样范围
+		 * $PowV=			0-120.00V, 	倍率100		uint16_t
+		 * $ExtHC=			0-100.00%,
+		 * $HCP=			0-65.00Mpa,
+		 * $FcTemp=		0-80.00�?,		倍率100
+		 * $ExtTemp=		0-80.00�?,		倍率100
+		 * $ShuntA_C=		0-100.00A,	倍率100
+		 * $ShuntA_V=		0-120.00V,	倍率100
+		 * $ShuntB_C=		0-100.00A,	倍率100
+		 * $ShuntB_V=		0-120.00V,	倍率100
+		 * $ShuntA_Power=0-100.00KW,	倍率100
+		 * $ShuntA_Total=0-100.00KWh,	倍率100
+		 * $ShuntB_Power=0-100.00KW,	倍率100
+		 * $ShuntB_Total=0-100.00KWh,	倍率100
+		 */
+
+		//#ifdef RS485_FLOWMETER
+		//if(count + DELAY_TIME <= HAL_GetTick()){
+		//	  queryFlowMeter();//获取流量计瞬时与累计流量
+		//    count = HAL_GetTick();
+		//}
+		//#endif
 
 
 
-	#ifdef USE_DEBUG_ANALOG
-	  RS232_1_printf("$ADC1_0=%d,$ADC1_1=%d,$ADC1_2=%d,$ADC1_3=%d,$ADC1_4=%d,",
+		#ifdef USE_DEBUG_ANALOG
+		RS232_1_printf("$ADC1_0=%d,$ADC1_1=%d,$ADC1_2=%d,$ADC1_3=%d,$ADC1_4=%d,",
 			  my_analog_inputs.adc1_values[0],
 			  my_analog_inputs.adc1_values[1],
 			  my_analog_inputs.adc1_values[2],
 			  my_analog_inputs.adc1_values[3],
 			  my_analog_inputs.adc1_values[4]
 		);
-	  RS232_1_printf("$ADC2_0=%d,$ADC2_1=%d,$ADC2_2=%d,$ADC2_3=%d\r\n",
+		RS232_1_printf("$ADC2_0=%d,$ADC2_1=%d,$ADC2_2=%d,$ADC2_3=%d\r\n",
 			  my_analog_inputs.adc2_values[0],
 			  my_analog_inputs.adc2_values[1],
 			  my_analog_inputs.adc2_values[2],
 			  my_analog_inputs.adc2_values[3]
 		);
-	#endif
+		#endif
 
-/**
- * 采样范围
- * $PowV=			0-120.00V, 	倍率100		uint16_t
- * $ExtHC=			0-100.00%,
- * $HCP=			0-65.00Mpa,
- * $FcTemp=		0-80.00�?,		倍率100
- * $ExtTemp=		0-80.00�?,		倍率100
- * $ShuntA_C=		0-100.00A,	倍率100
- * $ShuntA_V=		0-120.00V,	倍率100
- * $ShuntB_C=		0-100.00A,	倍率100
- * $ShuntB_V=		0-120.00V,	倍率100
- * $ShuntA_Power=0-100.00KW,	倍率100
- * $ShuntA_Total=0-100.00KWh,	倍率100
- * $ShuntB_Power=0-100.00KW,	倍率100
- * $ShuntB_Total=0-100.00KWh,	倍率100
- */
-	//FDCAN1_Send_Msg(can_Tdat,FDCAN_DLC_BYTES_8);
-
-    osDelay(SAMPLING_INTERVAL);
-    HAL_IWDG_Refresh(&hiwdg);//喂狗 超过2s复位
-  }
+		//FDCAN1_Send_Msg(can_Tdat,FDCAN_DLC_BYTES_8);
+		osDelay(SAMPLING_INTERVAL);
+		HAL_IWDG_Refresh(&hiwdg);//喂狗 超过2s复位
+	}
   /* USER CODE END Start_Analog_Task03 */
 }
 
@@ -779,14 +595,14 @@ __weak void RtosCallback01(void const * argument)
 /* USER CODE BEGIN Application */
 
 void SysDataInit(void){
-//	sysControl.Expected_FC_Fan_Speed = 0;				//当前�??? FC主风扇转�??? PWM 占空�??? 0-100%
-//	sysControl.Expected_FC_Fan_Enable = true;						//当前�??? FC主风扇使�???
-//	sysControl.Expected_DCDC_Enable;							//当前�??? DCDC使能
-//	sysControl.Expected_Heatsink_Fan_Enable;				//当前�??? FCU散热风扇使能
-//	sysControl.Expected_Hydrogen_Inlet_Valve_Enable;		//当前�??? 氢气进气�???使能
-//	sysControl.Expected_Hydrogen_Exhaust_Valve_Enable;	//当前�??? 氢气排气�???使能
-//	sysControl.Expected_Contactor_Fc_Enable;				//当前�??? 燃料电池接触器A使能
-//	sysControl.Expected_Contactor_Load_Enable;				//当前�??? 终端负载接触器B使能
+//	sysControl.Expected_FC_Fan_Speed = 0;
+//	sysControl.Expected_FC_Fan_Enable = true;
+//	sysControl.Expected_DCDC_Enable;
+//	sysControl.Expected_Heatsink_Fan_Enable;
+//	sysControl.Expected_Hydrogen_Inlet_Valve_Enable;
+//	sysControl.Expected_Hydrogen_Exhaust_Valve_Enable;
+//	sysControl.Expected_Contactor_Fc_Enable;
+//	sysControl.Expected_Contactor_Load_Enable;
 }
 /* USER CODE END Application */
 

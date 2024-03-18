@@ -146,32 +146,27 @@ void Error_Handler(void);
 #define PCA9555_INT_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define CAN_ID 0x456			// 定义CAN帧的标识�?
-#define SAMPLING_INTERVAL (300) //ADC采样间隔
+#define CAN_ID 0x456				// 定义CAN启动帧ID
+#define SAMPLING_INTERVAL (300) 	// ADC采样间隔  ms
 #define DELAY_TIME (1000)
 
-/*----------------------模拟值采样参数设�?----------------------*/
-#define NTC_B           (3950.0)     //温度系数
-#define NTC_TN          (298.15)     //额定温度(绝对温度加常�???:273.15+25)
-#define NTC_RN          (10000.0)   // 热敏电阻阻�?? 25 摄氏度时的阻�???(单位欧姆)
-#define NTC_R1          (10000.0)   // 分压电阻阻�??
-#define NTC_BaseVol     (3.29)        //AD基准电压
+/*----------------------模拟值采样参数设置---------------------*/
+#define NTC_B           (3950.0)     	//温度系数
+#define NTC_TN          (298.15)     	//额定温度(绝对温度加常温 273.15+25)
+#define NTC_RN          (10000.0)   	//热敏电阻在 25 摄氏度时的阻值(单位欧姆)
+#define NTC_R1          (10000.0)   	//分压电阻阻值(欧姆)
+#define NTC_BaseVol     (3.29)      	//AD基准电压
+
 /*-------------------------系统参数设置------------------------*/
-//#define DEFAULT_SYS_TWOFC 			//双堆定义
-#define DEFAULT_SYS_STATUS DEVICE_STOPPED			//系统默认状�??
-#define SYS_MAX_POWER		(0.7)					//整个系统�?大输出KW
-#define FC_LOLO_V			(55*0.55) 			//电堆级限�?低电�? 单片截止电压0.55V（低于不可�?�损坏，）最大电�? 1V
+#define DEFAULT_SYS_STATUS DEVICE_STOPPED			//系统默认状态
+#define SYS_MAX_POWER		(0.7)					//整个系统最大输出KW
+#define FC_LOLO_V			(55*0.55) 				//电堆级限最低电压，单片截止电压0.55V（低于不可逆损坏）最小电压30.25V
 #define FC_HIHI_TEMP		(55)					//电堆级限温度
 #define FC_NORMAL_TEMP		(46)					//电堆理想温度
 #define FC_EXHAUST_PERIED   (7500)					//排气周期 ms
 #define FC_EXHAUST_TIME     (200)					//排气时长 ms
 
-#ifdef DEFAULT_SYS_TWOFC   //双堆使能
-#define A_FC_LOLO_V	FC_LOLO_V
-#define B_FC_LOLO_V	(45.1-2)
-#endif
-
-#define RS485_FLOWMETER								//如果没有流量计注释这�?�?
+//#define RS485_FLOWMETER								//如果没有流量计，则注释掉
 
 #define DISPLAY_ICON_R (0)
 #define DISPLAY_ICON_Y (1)
