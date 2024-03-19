@@ -48,50 +48,51 @@ typedef struct {
     float Lo_Val;		//过低
     float High_Val;		//过高
     float HiHi_Val;		//极高
-    float Current_Val;	//当前�???
-    ValState_t Status;	//状前状�?�枚举类型变�???
+    float Current_Val;	//当前值
+    ValState_t Status;	//状态枚举类型
 } Parameter_t;
 typedef struct {
 	/**
 	 * DMA获取数组值与通道对应关系
 	 * adc1_0->AD1_IN3	->PA2	->Power_Voltage; 						//FCU输入电压(单位V)
-	 * adc1_1->AD1_IN4	->PA3	->External_Hydrogen_Concentration;	//堆外氢浓
+	 * adc1_1->AD1_IN4	->PA3	->External_Hydrogen_Concentration;		//堆外氢浓
 	 * adc1_2->AD1_IN5	->PC4	->Hydrogen_Cylinder_Pressure;			//氢气瓶压
-	 * adc1_3->AD1_IN11	->PB12	->FC_Internal_Temperature;				//堆内温度	(单位摄氏�???)
-	 * adc1_4->AD1_IN12	->PB1	->FC_External_Temperature;				//堆外温度	(单位摄氏�???)
-	 * adc2_0->AD2_IN1	->PA0	->Shunt_A_Current;						//分流器A电流(单位A)
-	 * adc2_1->AD2_IN2	->PA1	->Shunt_A_Voltage;						//分流器A电压(单位V)
-	 * adc2_2->AD2_IN5	->PC4	->Shunt_B_Current;						//分流器B电流(单位A)
-	 * adc2_3->AD2_IN12	->PB2	->Shunt_B_Voltage;						//分流器B电压(单位V)
+	 * adc1_3->AD1_IN11	->PB12	->FC_Internal_Temperature;				//堆内温度	(单位摄氏)
+	 * adc1_4->AD1_IN12	->PB1	->FC_External_Temperature;				//堆外温度	(单位摄氏)
+	 * adc2_0->AD2_IN1	->PA0	->Shunt_A_Current;						//分流器A 电堆输出电流(单位A)
+	 * adc2_1->AD2_IN2	->PA1	->Shunt_A_Voltage;						//分流器A 电堆输出电压(单位V)
+	 * adc2_2->AD2_IN5	->PC4	->Shunt_B_Current;						//分流器B 负载输出电流(单位A)
+	 * adc2_3->AD2_IN12	->PB2	->Shunt_B_Voltage;						//分流器B 负载输出电压(单位V)
 	 */
-	uint16_t adc1_values[5];							//adc1原始 �?
-	uint16_t adc2_values[4];							//adc2原始 �?
-	Parameter_t Power_Voltage; 						//FCU输入电压(单位V)
-	Parameter_t Shunt_A_Voltage;						//分流器A电压(单位V)
-	Parameter_t Shunt_A_Current;						//分流器A电流(单位A)
-	Parameter_t Shunt_A_Power;						//*分流器A瞬时功率(单位kW)
-	Parameter_t Shunt_A_Total_Energy;				//*分流器A累计电能(单位kWh)
-	Parameter_t Shunt_B_Voltage;						//分流器B电压(单位V)
-	Parameter_t Shunt_B_Current;						//分流器B电流(单位A)
-	Parameter_t Shunt_B_Power;						//*分流器B瞬时功率(单位kW)
-	Parameter_t Shunt_B_Total_Energy;				//*分流器B累计电能(单位kWh)
-	Parameter_t FC_Internal_Temperature;			//堆内温度	(单位摄氏�???)
-	Parameter_t FC_External_Temperature;			//堆外温度	(单位摄氏�???)
-	Parameter_t Hydrogen_Cylinder_Pressure;		//氢气瓶压
-	Parameter_t External_Hydrogen_Concentration;	//堆外氢浓
-	float Shooting_Flow;		//瞬时流量
-	float Integrated_Flow;	//累计流量
+	uint16_t adc1_values[5];					 // adc1原始值
+	uint16_t adc2_values[4];					 // adc2原始值
+	Parameter_t Power_Voltage;					 // FCU输入电压(单位V)
+	Parameter_t Shunt_A_Voltage;				 // 分流器A电压(单位V)
+	Parameter_t Shunt_A_Current;				 // 分流器A电流(单位A)
+	Parameter_t Shunt_A_Power;					 //*分流器A瞬时功率(单位kW)
+	Parameter_t Shunt_A_Total_Energy;			 //*分流器A累计电能(单位kWh)
+	Parameter_t Shunt_B_Voltage;				 // 分流器B电压(单位V)
+	Parameter_t Shunt_B_Current;				 // 分流器B电流(单位A)
+	Parameter_t Shunt_B_Power;					 //*分流器B瞬时功率(单位kW)
+	Parameter_t Shunt_B_Total_Energy;			 //*分流器B累计电能(单位kWh)
+	Parameter_t FC_Internal_Temperature;		 // 堆内温度	(单位摄氏)
+	Parameter_t FC_External_Temperature;		 // 堆外温度	(单位摄氏)
+	Parameter_t Hydrogen_Cylinder_Pressure;		 // 氢气瓶压
+	Parameter_t External_Hydrogen_Concentration; // 堆外氢浓
+	float Shooting_Flow;						 // 瞬时流量
+	float Integrated_Flow;						 // 累计流量
 
 } AnalogInputs_TypeDef;
-typedef struct {
-	uint8_t Expected_FC_Fan_Speed;					//目标�??? FC主风扇转�??? PWM 占空�??? 0-100%
-	bool Expected_FC_Fan_Enable;						//目标�??? FC主风扇使�???
-	bool Expected_DCDC_Enable;							//目标�??? DCDC使能
-	bool Expected_Heatsink_Fan_Enable;				//目标�??? FCU散热风扇使能
-	bool Expected_Hydrogen_Inlet_Valve_Enable;		//目标�??? 氢气进气�???使能
-	bool Expected_Hydrogen_Exhaust_Valve_Enable;	//目标�??? 氢气排气�???使能
-	bool Expected_Contactor_Fc_Enable;				//目标�??? 燃料电池接触器A使能
-  	bool Expected_Contactor_Load_Enable;				//目标�??? 终端负载接触器B使能
+typedef struct
+{
+	uint8_t Expected_FC_Fan_Speed;				 // 散热风扇转速 PWM 占空比u 0-100%
+	bool Expected_FC_Fan_Enable;				 // 散热风扇使能
+	bool Expected_DCDC_Enable;					 // 总输出DCDC使能
+	bool Expected_Heatsink_Fan_Enable;			 // FCU散热风扇使能
+	bool Expected_Hydrogen_Inlet_Valve_Enable;	 // 氢气进气阀使能
+	bool Expected_Hydrogen_Exhaust_Valve_Enable; // 氢气排气阀使能
+	bool Expected_Contactor_Fc_Enable;			 // 燃料电池接触器A使能
+	bool Expected_Contactor_Load_Enable;		 // 终端负载接触器B使能
 } SysControl_TypeDef;
 
 typedef enum {
@@ -102,18 +103,20 @@ typedef enum {
     DEVICE_FAULT		//故障
 } DeviceStatus_t;
 
-typedef struct {
-    bool device_paused;     //设备是否已暂�?
-    bool device_started;    //设备是否已启�?
-    bool device_stopped;    //设备是否已停�?
-    bool device_error;      //设备是否出现错误
-    bool device_fault;      //设备是否故障
+typedef struct
+{
+	bool device_paused;	 // 设备是否已暂停
+	bool device_started; // 设备是否已启动
+	bool device_stopped; // 设备是否已停机
+	bool device_error;	 // 设备是否出现错误
+	bool device_fault;	 // 设备是否故障
 } DeviceFlags_t;
 
-typedef struct {
-	//用于储存PCA9555当前 IO 状�?�和目标 IO 状�??
-    uint16_t pca9555_current_state;	//当前
-    uint16_t pca9555_expected_state;	//期望
+typedef struct
+{
+	// 用于储存PCA9555当前 IO 状态和目标 IO 状态
+	uint16_t pca9555_current_state;	 // 当前
+	uint16_t pca9555_expected_state; // 期望
 } PCA9555_IO_Status_t;
 
 /* USER CODE END ET */
