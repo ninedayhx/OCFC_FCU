@@ -30,6 +30,9 @@ FDCAN_TxHeaderTypeDef fdcan1_TxHeader;
 
 extern AnalogInputs_TypeDef my_analog_inputs;
 extern DeviceStatus_t Sys_status;
+// 上位机发送的pwm值
+extern uint8_t host_fan_pwm; //0-99
+extern bool using_host_fan_data; // 
 
 /* USER CODE END 0 */
 
@@ -274,6 +277,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             }
             else
                 Sys_status = DEVICE_STOPPED;
+            // [0:1]: 是否接收上位机控制策略
+            if (getBit(CAN_RxDat[0], 1))
+            {
+                using_host_fan_data = true;
+                host_fan_pwm = CAN_RxDat[1];
+            }
+            else
+                using_host_fan_data = false;
             // [0:7]: 是否发送传感器数据
             if (getBit(CAN_RxDat[0], 7))
             {

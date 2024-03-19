@@ -59,6 +59,10 @@ SysControl_TypeDef sysControl;
 DeviceStatus_t Sys_status = DEFAULT_SYS_STATUS;//默认上电状态
 DeviceFlags_t Sys_flags = {false, false, false, false, false};
 
+// 上位机发送的pwm值
+uint8_t host_fan_pwm; //0-99
+bool using_host_fan_data; // 
+
 extern I2C_HandleTypeDef hi2c1;
 extern IWDG_HandleTypeDef hiwdg;
 extern TIM_HandleTypeDef htim4;
@@ -332,10 +336,19 @@ __weak void Start_Top_Task(void const * argument)
 						sysControl.Expected_Contactor_Load_Enable = true;
 					}
 
-					// 每隔0.2s对散热风扇进行转速控制，默认策略为查表法
-					sysControl.Expected_FC_Fan_Speed = calculateFanSpeed(
-						my_analog_inputs.FC_Internal_Temperature.Current_Val,
-						my_analog_inputs.Shunt_B_Power.Current_Val);
+					// 如果接收到上位机传送的风扇转速控制指令
+					if(using_host_fan_data)
+					{
+						if(host_fan_pwm>99)  
+							sysControl.Expected_FC_Fan_Speed = 99;
+						else
+							sysControl.Expected_FC_Fan_Speed = host_fan_pwm;
+					}else{
+						// 每隔0.2s对散热风扇进行转速控制，默认策略为查表法
+						sysControl.Expected_FC_Fan_Speed = calculateFanSpeed(
+							my_analog_inputs.FC_Internal_Temperature.Current_Val,
+							my_analog_inputs.Shunt_B_Power.Current_Val);
+					}
 
 					count = HAL_GetTick();
 				}
