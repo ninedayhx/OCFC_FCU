@@ -7,4 +7,6 @@
 /.vscode
 /.vs
 /cmake
-/simulink/slprj
+/simulink/*
+!driver.slx
+!driver.slx.r2022a
