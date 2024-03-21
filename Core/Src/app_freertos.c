@@ -59,10 +59,6 @@ SysControl_TypeDef sysControl;
 DeviceStatus_t Sys_status = DEFAULT_SYS_STATUS;//默认上电状态
 DeviceFlags_t Sys_flags = {false, false, false, false, false};
 
-// 上位机发送的pwm值
-uint8_t host_fan_pwm; //0-99
-bool using_host_fan_data; // 
-
 extern I2C_HandleTypeDef hi2c1;
 extern IWDG_HandleTypeDef hiwdg;
 extern TIM_HandleTypeDef htim4;
@@ -123,6 +119,7 @@ void MX_FREERTOS_Init(void) {
   RtosTimer01Handle = osTimerCreate(osTimer(RtosTimer01), osTimerPeriodic, NULL);
 
   /* USER CODE BEGIN RTOS_TIMERS */
+  osTimerStart(RtosTimer01Handle,10);
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
@@ -340,12 +337,12 @@ __weak void Start_Top_Task(void const * argument)
 					}
 
 					// 如果接收到上位机传送的风扇转速控制指令
-					if(using_host_fan_data)
+					if(Sys_flags.host_command_enable)
 					{
-						if(host_fan_pwm>99)  
+						if(sysControl.Host_FC_Fan_Speed>99)  
 							sysControl.Expected_FC_Fan_Speed = 99;
 						else
-							sysControl.Expected_FC_Fan_Speed = host_fan_pwm;
+							sysControl.Expected_FC_Fan_Speed = sysControl.Host_FC_Fan_Speed;
 					}else{
 						// 每隔0.2s对散热风扇进行转速控制，默认策略为查表法
 						sysControl.Expected_FC_Fan_Speed = calculateFanSpeed(
@@ -605,6 +602,36 @@ __weak void RtosCallback01(void const * argument)
 {
   /* USER CODE BEGIN RtosCallback01 */
 
+	uint8_t CAN_TxDat[8];
+
+	if(Sys_flags.sensor_trans_enable==true)
+	{
+		convertFloatsToCANData(
+			my_analog_inputs.Power_Voltage.Current_Val,
+			my_analog_inputs.Hydrogen_Cylinder_Pressure.Current_Val,
+			my_analog_inputs.FC_Internal_Temperature.Current_Val,
+			my_analog_inputs.FC_External_Temperature.Current_Val,
+			CAN_TxDat);
+		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x123);
+		convertFloatsToCANData(
+			my_analog_inputs.Shunt_A_Current.Current_Val,
+			my_analog_inputs.Shunt_A_Voltage.Current_Val,
+			my_analog_inputs.Shunt_B_Current.Current_Val,
+			my_analog_inputs.Shunt_B_Voltage.Current_Val,
+			CAN_TxDat);
+		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x124);
+		convertFloatsToCANData(
+			my_analog_inputs.Shunt_A_Power.Current_Val,
+			my_analog_inputs.Shunt_A_Total_Energy.Current_Val,
+			my_analog_inputs.Shunt_B_Power.Current_Val,
+			my_analog_inputs.Shunt_B_Total_Energy.Current_Val,
+			CAN_TxDat);
+		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x125);
+	}
+	if(Sys_flags.host_command_enable)
+	{
+
+	}
   /* USER CODE END RtosCallback01 */
 }
 

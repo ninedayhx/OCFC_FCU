@@ -86,6 +86,7 @@ typedef struct {
 typedef struct
 {
 	uint8_t Expected_FC_Fan_Speed;				 // 散热风扇转速 PWM 占空比u 0-100%
+	uint8_t Host_FC_Fan_Speed;					// 上位机传输的PWM占空比，0-99
 	bool Expected_FC_Fan_Enable;				 // 散热风扇使能
 	bool Expected_DCDC_Enable;					 // 总输出DCDC使能
 	bool Expected_Heatsink_Fan_Enable;			 // FCU散热风扇使能
@@ -105,11 +106,13 @@ typedef enum {
 
 typedef struct
 {
-	bool device_paused;	 // 设备是否已暂停
-	bool device_started; // 设备是否已启动
-	bool device_stopped; // 设备是否已停机
-	bool device_error;	 // 设备是否出现错误
-	bool device_fault;	 // 设备是否故障
+	bool device_paused;		  // 设备是否已暂停
+	bool device_started;	  // 设备是否已启动
+	bool device_stopped;	  // 设备是否已停机
+	bool device_error;		  // 设备是否出现错误
+	bool device_fault;		  // 设备是否故障
+	bool host_command_enable; // 上位机指令使能
+	bool sensor_trans_enable; // 传感器输出使能
 } DeviceFlags_t;
 
 typedef struct

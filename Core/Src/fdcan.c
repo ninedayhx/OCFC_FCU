@@ -30,9 +30,8 @@ FDCAN_TxHeaderTypeDef fdcan1_TxHeader;
 
 extern AnalogInputs_TypeDef my_analog_inputs;
 extern DeviceStatus_t Sys_status;
-// 上位机发送的pwm值
-extern uint8_t host_fan_pwm; //0-99
-extern bool using_host_fan_data; // 
+extern SysControl_TypeDef sysControl;
+extern DeviceFlags_t Sys_flags;
 
 /* USER CODE END 0 */
 
@@ -249,7 +248,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
     uint16_t CAN_RxID_Buffer;
     uint8_t CAN_RxDat_Buffer[8];
-    uint8_t CAN_TxDat[8];
+
     if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != 0)
     {
         if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &fdcan1_RxHeader, CAN_RxDat_Buffer) == HAL_OK)
@@ -280,38 +279,21 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             // [0:1]: 是否接收上位机控制策略
             if (getBit(CAN_RxDat[0], 1))
             {
-                using_host_fan_data = true;
-                host_fan_pwm = CAN_RxDat[1];
+                Sys_flags.host_command_enable = true;
+                // [1] 存储风扇转速 0-99
+                sysControl.Host_FC_Fan_Speed = CAN_RxDat[1];
             }
-            else
-                using_host_fan_data = false;
+            else{
+                Sys_flags.host_command_enable = false;
+                sysControl.Host_FC_Fan_Speed = 0;
+            }
             // [0:7]: 是否发送传感器数据
             if (getBit(CAN_RxDat[0], 7))
             {
-                convertFloatsToCANData(
-                    my_analog_inputs.Power_Voltage.Current_Val,
-                    my_analog_inputs.Hydrogen_Cylinder_Pressure.Current_Val,
-                    my_analog_inputs.FC_Internal_Temperature.Current_Val,
-                    my_analog_inputs.FC_External_Temperature.Current_Val,
-                    CAN_TxDat);
-                FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x123);
-                memset(CAN_RxDat, 0, sizeof(CAN_RxDat));
-                convertFloatsToCANData(
-                    my_analog_inputs.Shunt_A_Current.Current_Val,
-                    my_analog_inputs.Shunt_A_Voltage.Current_Val,
-                    my_analog_inputs.Shunt_B_Current.Current_Val,
-                    my_analog_inputs.Shunt_B_Voltage.Current_Val,
-                    CAN_TxDat);
-                FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x124);
-                memset(CAN_RxDat, 0, sizeof(CAN_RxDat));
-                convertFloatsToCANData(
-                    my_analog_inputs.Shunt_A_Power.Current_Val,
-                    my_analog_inputs.Shunt_A_Total_Energy.Current_Val,
-                    my_analog_inputs.Shunt_B_Power.Current_Val,
-                    my_analog_inputs.Shunt_B_Total_Energy.Current_Val,
-                    CAN_TxDat);
-                FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x125);
-                memset(CAN_RxDat, 0, sizeof(CAN_RxDat));
+                Sys_flags.sensor_trans_enable = true;
+            }
+            else{
+                Sys_flags.sensor_trans_enable = false;
             }
             memset(CAN_RxDat, 0, sizeof(CAN_RxDat)); // 将数组元素全部置0
         }

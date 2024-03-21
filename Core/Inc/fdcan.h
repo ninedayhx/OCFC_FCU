@@ -43,6 +43,7 @@ void MX_FDCAN1_Init(void);
 /* USER CODE BEGIN Prototypes */
 
 //void CAN_SendUint16(FDCAN_HandleTypeDef* hfdcan, uint32_t id, uint8_t* data);
+void convertFloatsToCANData(float value1, float value2, float value3, float value4, uint8_t *CAN_RxDat_Buffer);
 uint8_t FDCAN1_Send_Msg(uint8_t* msg,uint32_t len, uint32_t canId);
 uint8_t FDCAN1_Receive_Msg(uint8_t *buf, uint16_t *Identifier);
 
