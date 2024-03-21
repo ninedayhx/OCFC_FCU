@@ -10,3 +10,4 @@
 /simulink/*
 !driver.slx
 !driver.slx.r2022a
+!driver_R2023a.slx
