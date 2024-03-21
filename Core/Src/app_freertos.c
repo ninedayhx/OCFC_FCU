@@ -188,7 +188,9 @@ __weak void Start_Top_Task(void const * argument)
 	bool ExhaustFlag = false;
 
 	osDelay(200);
+	// 默认上电时，不启动进气风扇以及DCDC散热风扇
 	sysControl.Expected_FC_Fan_Enable = 0;
+	sysControl.Expected_Heatsink_Fan_Enable = 0;
 
 	//获取系统时间
 	uint32_t count = HAL_GetTick();
@@ -202,10 +204,6 @@ __weak void Start_Top_Task(void const * argument)
 		osDelay(20);
 		// 更新风扇控制律
 		//FanControl_Update(&fan_control, my_analog_inputs.FC_Internal_Temperature.Current_Val, 0);
-
-		// 设置散热风扇使能标志位，注意，在此处仅仅只设置了标志位，真正的使能在另外一个线程中
-		// 由于在另外一个线程中，所以可以认为，此处设置了标志位，马上在另外一个线程中执行动作
-		sysControl.Expected_Heatsink_Fan_Enable = true;
 
 		//FCU状态机
 		switch(Sys_status) {
@@ -237,7 +235,9 @@ __weak void Start_Top_Task(void const * argument)
 					sysControl.Expected_FC_Fan_Enable = false;
 					//4.关闭电堆输出接触器
 					sysControl.Expected_Contactor_Fc_Enable = false;
-					//5.设置系统运行状态为关闭
+					//5.关闭DCDC散热风扇
+					sysControl.Expected_Heatsink_Fan_Enable = false;
+					//6.设置系统运行状态为关闭
 					Sys_flags.device_started = false;
 
 					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
@@ -255,24 +255,27 @@ __weak void Start_Top_Task(void const * argument)
 					RS232_1_printf("<$-%04d/%02d/%02d-%02d:%02d:%02d.%03d-$>", rtc_time.year, rtc_time.month, rtc_time.day, rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
 
 					RS232_1_printf("System is starting up! Please wait.....\n");
-					//1.散热风扇电源使能
+					//1.设置散热风扇使能标志位，注意，在此处仅仅只设置了标志位，真正的使能在另外一个线程中
+					// 由于在另外一个线程中，所以可以认为，此处设置了标志位，马上在另外一个线程中执行动作
+					sysControl.Expected_Heatsink_Fan_Enable = true;
+					//2.散热风扇电源使能
 					sysControl.Expected_FC_Fan_Enable = true;
 					osDelay(1000);
 					//  散热风扇转速设置为99
 					sysControl.Expected_FC_Fan_Speed = 99;
 					osDelay(500);
-					//2.氢气进气阀使能
+					//3.氢气进气阀使能
 					sysControl.Expected_Hydrogen_Inlet_Valve_Enable = true;
 					osDelay(1000);
-					//3.电堆输出接触器使能
+					//4.电堆输出接触器使能
 					sysControl.Expected_Contactor_Fc_Enable = true;
 					osDelay(1000);
-					//4.输出DCDC使能
+					//5.输出DCDC使能
 					sysControl.Expected_DCDC_Enable = true;
 					osDelay(1000);
-					//5.总输出接触器使能，开始对外输出
+					//6.总输出接触器使能，开始对外输出
 					sysControl.Expected_Contactor_Load_Enable = true;
-					//6.设置系统运行状态为启动
+					//7.设置系统运行状态为启动
 					Sys_flags.device_started = true;
 
 					getRtcDateTime(&rtc_time.year, &rtc_time.month, &rtc_time.day, &rtc_time.hour, &rtc_time.min, &rtc_time.sec, &rtc_time.ms);
@@ -419,6 +422,7 @@ __weak void Start_ActiveExtIO_Task02(void const * argument)
 	bool Current_Contactor_Load_Enable = sysControl.Expected_Contactor_Load_Enable;
 
 	FC_Fan_Close;
+	Heatsink_Fan_Close;
 	__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, htim4.Init.Period - 10);
 
 	/* Infinite loop */
