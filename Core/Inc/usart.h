@@ -46,17 +46,17 @@ extern UART_HandleTypeDef huart3;
 
 typedef struct {
 	uint8_t rx_buffer[UART_RX_BUFFER_SIZE];   // 接收数据缓存数组
-	uint8_t rx_len;             			// 接收�???帧数据的长度
-	bool recv_end_flag;  				//�???帧数据接收完成标�???
+	uint8_t rx_len;             			// 接收�???帧数据的长度
+	bool recv_end_flag;  				//�???帧数据接收完成标�???
 } UART_ReceiveTypeDef;
 
-#define USART1_REC_LEN 255//RS232_1,�???大发送字节数
-#define USART1_SEN_LEN 255//RS232_1,�???大接收字节数
+#define USART1_REC_LEN 255//RS232_1,�???大发送字节数
+#define USART1_SEN_LEN 255//RS232_1,�???大接收字节数
 
-#define USART2_REC_LEN 255//RS232_2,�???大发送字节数
-#define USART2_SEN_LEN 255//RS232_2,�???大接收字节数
+#define USART2_REC_LEN 255//RS232_2,�???大发送字节数
+#define USART2_SEN_LEN 255//RS232_2,�???大接收字节数
 
-#define USART3_REC_LEN 328//RS485 �???大发送字节数
+#define USART3_REC_LEN 328//RS485 �???大发送字节数
 /* USER CODE END Private defines */
 
 void MX_USART1_UART_Init(void);

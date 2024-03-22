@@ -107,7 +107,7 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef* rtcHandle)
 
 /* USER CODE BEGIN 1 */
 
-// 获取RTC时间的函�??
+// 获取RTC时间的函�??
 void getRtcDateTime(uint16_t* year, uint8_t* month, uint8_t* day, uint8_t* hour, uint8_t* min, uint8_t* sec, uint16_t* ms)
 {
     RTC_TimeTypeDef sTime;
@@ -115,11 +115,11 @@ void getRtcDateTime(uint16_t* year, uint8_t* month, uint8_t* day, uint8_t* hour,
     HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
     HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
 
-    // 获取毫秒�??
+    // 获取毫秒�??
     uint32_t tick = HAL_GetTick();
     uint16_t ms_val = tick % 1000;
 
-    // 返回日期时间�??
+    // 返回日期时间�??
     *year = sDate.Year;
     *month = sDate.Month;
     *day = sDate.Date;
@@ -134,7 +134,7 @@ void setRtcTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t 
     RTC_TimeTypeDef sTime = {0};
     RTC_DateTypeDef sDate = {0};
 
-    // 获取RTC时间和日期的默认�??
+    // 获取RTC时间和日期的默认�??
     sTime.TimeFormat = RTC_HOURFORMAT_24;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
@@ -144,18 +144,18 @@ void setRtcTime(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t 
     sDate.Date = day;
     sDate.Year = year;
 
-    // 设置RTC时间和日�??
+    // 设置RTC时间和日�??
     sTime.Hours = hour;
     sTime.Minutes = minute;
     sTime.Seconds = second;
 
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK) {
-        // 设置时间失败，进行错误处�??
+        // 设置时间失败，进行错误处�??
         Error_Handler();
     }
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK) {
-        // 设置日期失败，进行错误处�??
+        // 设置日期失败，进行错误处�??
         Error_Handler();
     }
 }

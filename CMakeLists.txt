@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project("Simplify_FCU_V1.2" C CXX ASM)
+project("OCFC_FCU" C CXX ASM)
 
 include(cmake/st-project.cmake)
 

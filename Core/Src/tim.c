@@ -153,8 +153,8 @@ void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 1 */
   /**
    * PWM频率设置
-   * 主时钟频�?? �?? htim4.Init.Prescaler �?? htim4.Init.Period
-   * 170MHz �?? 65 �?? 100 = 25KHz
+   * 主时钟频�?? �?? htim4.Init.Prescaler �?? htim4.Init.Period
+   * 170MHz �?? 65 �?? 100 = 25KHz
    */
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
@@ -427,8 +427,8 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* tim_baseHandle)
 
 /* USER CODE BEGIN 1 */
 /**
- * �??0�??100之间的�?�映射到12�??100之间的�??
- * 风扇�??低转速占空比12% �??�??100%
+ * �??0�??100之间的�?�映射到12�??100之间的�??
+ * 风扇�??低转速占空比12% �??�??100%
  */
 uint8_t map_0_to_100_to_12_to_100(uint8_t value_0_to_100) {
     return (uint8_t)((float)(value_0_to_100 - 0) / (float)(100 - 0) * (float)(100 - 12) + (float)12);

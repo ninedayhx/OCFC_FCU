@@ -39,6 +39,8 @@
 #include "fdcan.h"
 
 #include "w25q64.h"
+
+#include "DAC8568.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -383,7 +385,7 @@ __weak void Start_Top_Task(void const * argument)
 /* USER CODE END Header_Start_ActiveExtIO_Task02 */
 __weak void Start_ActiveExtIO_Task02(void const * argument)
 {
-	/* USER CODE BEGIN Start_ActiveExtIO_Task02 */
+  /* USER CODE BEGIN Start_ActiveExtIO_Task02 */
 
 	// 获取PCA9555的设备地址
 	uint8_t pca9555_device_address = PCA9555_Get_Device_Address(PCA9555_A2, PCA9555_A1, PCA9555_A0, 0);

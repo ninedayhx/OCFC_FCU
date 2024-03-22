@@ -144,10 +144,16 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define W25Q64_CS_Pin GPIO_PIN_4
 #define W25Q64_CS_GPIO_Port GPIOA
+#define DAC_SYNC_Pin GPIO_PIN_13
+#define DAC_SYNC_GPIO_Port GPIOB
 #define WS2812_800KHz_Pin GPIO_PIN_6
 #define WS2812_800KHz_GPIO_Port GPIOC
 #define BUZZER_2700Hz_Pin GPIO_PIN_15
 #define BUZZER_2700Hz_GPIO_Port GPIOA
+#define DAC_SCK_Pin GPIO_PIN_10
+#define DAC_SCK_GPIO_Port GPIOC
+#define DAC_DIN_Pin GPIO_PIN_5
+#define DAC_DIN_GPIO_Port GPIOB
 #define PCA9555_INT_Pin GPIO_PIN_9
 #define PCA9555_INT_GPIO_Port GPIOB
 

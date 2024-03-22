@@ -79,12 +79,12 @@ void MX_USART1_UART_Init(void)
   }
   /* USER CODE BEGIN USART1_Init 2 */
 
-  //每接�???1个字符才会调用一�??? HAL_UART_RxCpltCallback
+  //每接�???1个字符才会调用一�??? HAL_UART_RxCpltCallback
   //HAL_UART_Receive_IT(&huart1, huart1_rx_buffer, 1);
 
   __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE); //使能IDLE中断
   /**
-   * DMA接收函数，此句一定要加，不加接收不到第一次传进来的实数据，是空的�???
+   * DMA接收函数，此句一定要加，不加接收不到第一次传进来的实数据，是空的�???
    * 且此时接收到的数据长度为缓存器的数据长度
    */
   HAL_UART_Receive_DMA(&huart1,uart1_receive.rx_buffer,UART1_RX_BUFFER_SIZE);
@@ -135,7 +135,7 @@ void MX_USART2_UART_Init(void)
 
   //__HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE); //使能IDLE中断
   /**
-   * DMA接收函数，此句一定要加，不加接收不到第一次传进来的实数据，是空的�???
+   * DMA接收函数，此句一定要加，不加接收不到第一次传进来的实数据，是空的�???
    * 且此时接收到的数据长度为缓存器的数据长度
    */
   HAL_UART_Receive_DMA(&huart2,uart2_receive.rx_buffer,UART2_RX_BUFFER_SIZE);

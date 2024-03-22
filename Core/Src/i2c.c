@@ -153,7 +153,7 @@ void PCA9555_Init(I2C_HandleTypeDef *i2cHandle, uint8_t device_address) {
 		RS232_1_printf("PCA9555_Init:0x%02X \n ", data);
     #endif
 }
-//配置PCA9555的IO口模�??
+//配置PCA9555的IO口模�??
 void PCA9555_Set_IO_Mode(I2C_HandleTypeDef *i2cHandle, uint8_t device_address, uint16_t io_mode) {
     uint8_t data[3];
     data[0] = PCA9555_REG_CONF_PORT0;
@@ -164,7 +164,7 @@ void PCA9555_Set_IO_Mode(I2C_HandleTypeDef *i2cHandle, uint8_t device_address, u
     	RS232_1_printf("PCA9555_Set_IO_Mode:0x%02X 0x%02X 0x%02X\n", data[0], data[1], data[2]);
     #endif
 }
-//读取PCA9555的IO口状�??
+//读取PCA9555的IO口状�??
 uint16_t PCA9555_Read_IO_State(I2C_HandleTypeDef *i2cHandle, uint8_t device_address) {
     uint8_t data[2];
     HAL_I2C_Master_Receive(i2cHandle, device_address, data, 2, 10);
@@ -173,7 +173,7 @@ uint16_t PCA9555_Read_IO_State(I2C_HandleTypeDef *i2cHandle, uint8_t device_addr
 	#endif
     return (uint16_t)data[1] << 8 | data[0];
 }
-//写入PCA9555的IO口状�??
+//写入PCA9555的IO口状�??
 void PCA9555_Write_IO_State(I2C_HandleTypeDef *i2cHandle, uint8_t device_address, uint16_t io_state) {
     uint8_t data[3];
     data[0] = PCA9555_REG_OUTPUT_PORT0;

@@ -97,7 +97,7 @@ void MX_FDCAN1_Init(void)
     HAL_FDCAN_Start(&hfdcan1);                                                  // 开启FDCAN
     HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0); // 开启接收中断
 
-    /* USER CODE END FDCAN1_Init 2 */
+  /* USER CODE END FDCAN1_Init 2 */
 
 }
 

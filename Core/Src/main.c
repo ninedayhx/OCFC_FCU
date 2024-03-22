@@ -36,6 +36,7 @@
 
 #include "rs485.h"
 #include "rs232.h"
+#include "DAC8568.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -114,12 +115,14 @@ int main(void)
   MX_USART2_UART_Init();
   MX_IWDG_Init();
   MX_TIM7_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
   /* Configure the SysTick timer to generate an interrupt every millisecond */
   Systick_Configuration();
   // 使能共模校准
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   HAL_ADCEx_Calibration_Start(&hadc2,  ADC_SINGLE_ENDED);
+  dac8568_init();
 
   /* USER CODE END 2 */
 

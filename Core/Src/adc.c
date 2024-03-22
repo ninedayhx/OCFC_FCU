@@ -458,8 +458,8 @@ float Get_Tempture(uint16_t adc,uint32_t ntc_rn ,uint32_t ntc_r1)
     Vout = adc * NTC_BaseVol/4095;//4095,4083
     Rt = (ntc_r1 * Vout / (NTC_BaseVol - Vout));
 
-    T = 1/(1/NTC_TN + log(Rt/ntc_rn)/NTC_B);  // �???尔文温度
-    Tc = T - 273.15;                    // 摄氏�???
+    T = 1/(1/NTC_TN + log(Rt/ntc_rn)/NTC_B);  // �???尔文温度
+    Tc = T - 273.15;                    // 摄氏�???
     //Tf = Tc * 9 / 5 + 32;               // 华氏温度
     return Tc;
 }
@@ -480,7 +480,7 @@ float power_calculation(float voltage, float current){
 	float power = voltage * current / 1000.0; // 单位换算成KW
 	return power;
 }
-//电能值计�???(单位kWh)
+//电能值计�???(单位kWh)
 float energy_calculation(float power, uint16_t time_interval_ms) {
     float energy = power * time_interval_ms / (1000.0 * 3600.0);
     //total_energy += energy;
