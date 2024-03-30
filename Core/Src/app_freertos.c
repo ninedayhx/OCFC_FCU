@@ -59,7 +59,7 @@ AnalogInputs_TypeDef my_analog_inputs;
 PCA9555_IO_Status_t ext_io_status;
 SysControl_TypeDef sysControl;
 DeviceStatus_t Sys_status = DEFAULT_SYS_STATUS;//默认上电状态
-DeviceFlags_t Sys_flags = {false, false, false, false, false};
+DeviceFlags_t Sys_flags = {false, false, false, false, false, false, false, false};
 
 extern I2C_HandleTypeDef hi2c1;
 extern IWDG_HandleTypeDef hiwdg;
@@ -165,6 +165,8 @@ __weak void Start_Top_Task(void const * argument)
 {
   /* USER CODE BEGIN Start_Top_Task */
   /* Infinite loop */
+	// SysDataInit();
+
 	FanControl_TypeDef fan_control;
 	PID_Init(&(fan_control.pid), K_P, K_I, K_D, -1.0f, 1.0f, FAN_PWM_MAX_VALUE, -FAN_PWM_MAX_VALUE, 0.1f, 50.0f);
 	/**
@@ -284,10 +286,18 @@ __weak void Start_Top_Task(void const * argument)
 
 				// 非阻塞控制排气阀延时通断，即通过计时来开关
 				// 如果排气阀是关闭状态
+				uint16_t ex_peried = 7500, ex_time = 200;
+				if(Sys_flags.host_command_enable){
+					ex_peried = sysControl.Exhaust_Peried;
+					ex_time = sysControl.Exhaust_Time;
+				}else{
+					ex_peried = FC_EXHAUST_PERIED;
+					ex_time = FC_EXHAUST_TIME;
+				}
 				if(!ExhaustFlag){
 					Exhaust_O_start_time = HAL_GetTick();// 获取当前系统时间，统计的是已经关阀的时间
 					// 如果排气阀关闭时间超过了排气周期
-					if ((Exhaust_O_start_time - Exhaust_O_current_time) >= FC_EXHAUST_PERIED) {
+					if ((Exhaust_O_start_time - Exhaust_O_current_time) >= ex_peried) {
 						// 排气阀打开
 						sysControl.Expected_Hydrogen_Exhaust_Valve_Enable = true;
 						// 开始对开阀时间进行计时
@@ -301,7 +311,7 @@ __weak void Start_Top_Task(void const * argument)
 				}else{
 					Exhaust_C_start_time =  HAL_GetTick();// 获取当前系统时间，统计的是已经开阀的时间
 					// 如果开阀时间超过了开阀时长
-					if ((Exhaust_C_start_time - Exhaust_C_current_time) >= FC_EXHAUST_TIME){
+					if ((Exhaust_C_start_time - Exhaust_C_current_time) >= ex_time){
 						// 排气阀关闭
 						sysControl.Expected_Hydrogen_Exhaust_Valve_Enable = false;
 						// 开始对关阀时间进行计时
@@ -608,6 +618,7 @@ __weak void RtosCallback01(void const * argument)
 
 	if(Sys_flags.sensor_trans_enable==true)
 	{
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 		convertFloatsToCANData(
 			my_analog_inputs.Power_Voltage.Current_Val,
 			my_analog_inputs.Hydrogen_Cylinder_Pressure.Current_Val,
@@ -615,6 +626,7 @@ __weak void RtosCallback01(void const * argument)
 			my_analog_inputs.FC_External_Temperature.Current_Val,
 			CAN_TxDat);
 		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x123);
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 		convertFloatsToCANData(
 			my_analog_inputs.Shunt_A_Current.Current_Val,
 			my_analog_inputs.Shunt_A_Voltage.Current_Val,
@@ -622,6 +634,7 @@ __weak void RtosCallback01(void const * argument)
 			my_analog_inputs.Shunt_B_Voltage.Current_Val,
 			CAN_TxDat);
 		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x124);
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 		convertFloatsToCANData(
 			my_analog_inputs.Shunt_A_Power.Current_Val,
 			my_analog_inputs.Shunt_A_Total_Energy.Current_Val,
@@ -629,10 +642,39 @@ __weak void RtosCallback01(void const * argument)
 			my_analog_inputs.Shunt_B_Total_Energy.Current_Val,
 			CAN_TxDat);
 		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x125);
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 	}
-	if(Sys_flags.host_command_enable)
-	{
+	if(Sys_flags.states_trans_enable){
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
+		CAN_TxDat[0] = 	(uint8_t)(Sys_flags.device_paused) +
+						(uint8_t)(Sys_flags.device_started)<<1 +
+						(uint8_t)(Sys_flags.device_stopped)<<2 +
+						(uint8_t)(Sys_flags.device_error)<<3 +
+						(uint8_t)(Sys_flags.device_fault)<<4 +
+						(uint8_t)(Sys_flags.host_command_enable)<<5 +
+						(uint8_t)(Sys_flags.sensor_trans_enable)<<6 +
+						(uint8_t)(Sys_flags.states_trans_enable)<<7;
 
+		CAN_TxDat[1] = 	(uint8_t)(sysControl.Expected_FC_Fan_Enable) +
+						(uint8_t)(sysControl.Expected_DCDC_Enable)<<1 +
+						(uint8_t)(sysControl.Expected_Heatsink_Fan_Enable)<<2 +
+						(uint8_t)(sysControl.Expected_Hydrogen_Inlet_Valve_Enable)<<3 +
+						(uint8_t)(sysControl.Expected_Hydrogen_Exhaust_Valve_Enable)<<4 +
+						(uint8_t)(sysControl.Expected_Contactor_Fc_Enable)<<5 +
+						(uint8_t)(sysControl.Expected_Contactor_Load_Enable)<<6;
+
+		CAN_TxDat[2] = 	(uint8_t)(sysControl.Exhaust_Peried>>8);
+		CAN_TxDat[3] =  (uint8_t)(sysControl.Exhaust_Peried);
+
+		CAN_TxDat[4] = 	(uint8_t)(sysControl.Exhaust_Time>>8);
+		CAN_TxDat[5] =  (uint8_t)(sysControl.Exhaust_Time);
+
+		uint16_t tmp =  (uint16_t)(sysControl.Temperature_reference*10);
+		CAN_TxDat[6] =  (uint8_t)(tmp>>2);
+		CAN_TxDat[7] =  (uint8_t)(sysControl.Expected_FC_Fan_Speed<<2) + 
+						(uint8_t)(tmp&0x0003);
+		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x122);
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 	}
   /* USER CODE END RtosCallback01 */
 }
@@ -640,15 +682,10 @@ __weak void RtosCallback01(void const * argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
-void SysDataInit(void){
-//	sysControl.Expected_FC_Fan_Speed = 0;
-//	sysControl.Expected_FC_Fan_Enable = true;
-//	sysControl.Expected_DCDC_Enable;
-//	sysControl.Expected_Heatsink_Fan_Enable;
-//	sysControl.Expected_Hydrogen_Inlet_Valve_Enable;
-//	sysControl.Expected_Hydrogen_Exhaust_Valve_Enable;
-//	sysControl.Expected_Contactor_Fc_Enable;
-//	sysControl.Expected_Contactor_Load_Enable;
-}
+// void SysDataInit(void){
+// 	sysControl.Expected_FC_Fan_Speed = 0;
+// 	sysControl.Exhaust_Peried = FC_EXHAUST_PERIED;
+// 	sysControl.Exhaust_Time = FC_EXHAUST_TIME;
+// }
 /* USER CODE END Application */
 

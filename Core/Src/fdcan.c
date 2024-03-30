@@ -257,7 +257,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             // 在这里处理接收到的CAN消息
         }
         // 如果CAN帧ID匹配,就吧数据转存至CAN_RxDat
-        if (CAN_RxID_Buffer == CAN_ID)
+        if (CAN_RxID_Buffer == 0x456)
         {
             CAN_RxID = CAN_RxID_Buffer;
             memcpy(CAN_RxDat, CAN_RxDat_Buffer, 8);
@@ -280,12 +280,18 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             if (getBit(CAN_RxDat[0], 1))
             {
                 Sys_flags.host_command_enable = true;
-                // [1] 存储风扇转速 0-99
-                sysControl.Host_FC_Fan_Speed = CAN_RxDat[1];
             }
             else{
                 Sys_flags.host_command_enable = false;
                 sysControl.Host_FC_Fan_Speed = 0;
+            }
+            // [0:6]: 是否发送状态数据
+            if (getBit(CAN_RxDat[0], 6))
+            {
+                Sys_flags.states_trans_enable = true;
+            }
+            else{
+                Sys_flags.states_trans_enable = false;
             }
             // [0:7]: 是否发送传感器数据
             if (getBit(CAN_RxDat[0], 7))
@@ -295,6 +301,39 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             else{
                 Sys_flags.sensor_trans_enable = false;
             }
+
+            // [1] 存储风扇转速 0-99
+            sysControl.Host_FC_Fan_Speed = CAN_RxDat[1];
+            // [2,3] 存储排气周期
+            sysControl.Exhaust_Peried = (uint16_t)CAN_RxDat[2]<<8 + CAN_RxDat[3];
+            // [4,5] 存储排气时长
+            sysControl.Exhaust_Time = (uint16_t)CAN_RxDat[4]<<8 + CAN_RxDat[5];
+            // [6,7] 存储参考温度
+            sysControl.Temperature_reference = (uint16_t)CAN_RxDat[6]<<8 + CAN_RxDat[7];
+            memset(CAN_RxDat, 0, sizeof(CAN_RxDat)); // 将数组元素全部置0
+        }
+        if (CAN_RxID_Buffer == 0x457){
+            memcpy(CAN_RxDat, CAN_RxDat_Buffer, 8);
+            // [0,1]
+            sysControl.Expected_DCDC_Vol = (uint16_t)CAN_RxDat[0]<<8 + CAN_RxDat[1];
+            // [2,3]
+            sysControl.Expected_DCDC_Cur = (uint16_t)CAN_RxDat[2]<<8 + CAN_RxDat[3];
+            // [4,5]
+            sysControl.Charge_DCDC_Vol = (uint16_t)CAN_RxDat[4]<<8 + CAN_RxDat[5];
+            // [6,7]
+            sysControl.Charge_DCDC_Cur = (uint16_t)CAN_RxDat[6]<<8 + CAN_RxDat[7];
+            memset(CAN_RxDat, 0, sizeof(CAN_RxDat)); // 将数组元素全部置0
+        }
+        if (CAN_RxID_Buffer == 0x458){
+            memcpy(CAN_RxDat, CAN_RxDat_Buffer, 8);
+            // [1,0]
+            sysControl.max_efficiency_power = (uint16_t)CAN_RxDat[1]<<8 + CAN_RxDat[0];
+            // [3,2]
+           
+            // [5,4]
+           
+            // [7,6]
+           
             memset(CAN_RxDat, 0, sizeof(CAN_RxDat)); // 将数组元素全部置0
         }
     }

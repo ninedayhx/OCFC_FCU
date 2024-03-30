@@ -86,10 +86,18 @@ typedef struct {
 typedef struct
 {
 	uint8_t Expected_FC_Fan_Speed;				 // 散热风扇转速 PWM 占空比u 0-100%
-	uint8_t Host_FC_Fan_Speed;					// 上位机传输的PWM占空比，0-99
+	uint8_t Host_FC_Fan_Speed;					 // 上位机传输的PWM占空比，0-99
+	uint16_t Exhaust_Peried;					 // 排气周期 1ms
+	uint16_t Exhaust_Time;						 // 排气时长 1ms
+	uint16_t Temperature_reference;				 // 参考温度 0-65536 0-100摄氏度
+	uint16_t max_efficiency_power;				 // 最大效率工作点 0-65535 0-1000W
+	uint16_t Expected_DCDC_Vol;					 // 总输出DCDC 输出电压 0-65535 0-56V
+	uint16_t Expected_DCDC_Cur;					 // 总输出DCDC 输出最大电流 0-65535 6-59A
+	uint16_t Charge_DCDC_Vol;					 // 充电DCDC 输出电压 0-65535 0-56V
+	uint16_t Charge_DCDC_Cur;					 // 充电DCDC 输出最大电流 0-65535 3-30A
 	bool Expected_FC_Fan_Enable;				 // 散热风扇使能
 	bool Expected_DCDC_Enable;					 // 总输出DCDC使能
-	bool Expected_Heatsink_Fan_Enable;			 // FCU散热风扇使能
+	bool Expected_Heatsink_Fan_Enable;			 // DCDC散热风扇使能
 	bool Expected_Hydrogen_Inlet_Valve_Enable;	 // 氢气进气阀使能
 	bool Expected_Hydrogen_Exhaust_Valve_Enable; // 氢气排气阀使能
 	bool Expected_Contactor_Fc_Enable;			 // 燃料电池接触器A使能
@@ -113,6 +121,7 @@ typedef struct
 	bool device_fault;		  // 设备是否故障
 	bool host_command_enable; // 上位机指令使能
 	bool sensor_trans_enable; // 传感器输出使能
+	bool states_trans_enable; // 状态输出使能
 } DeviceFlags_t;
 
 typedef struct
