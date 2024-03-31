@@ -618,7 +618,7 @@ __weak void RtosCallback01(void const * argument)
 
 	if(Sys_flags.sensor_trans_enable==true)
 	{
-		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
+		memset(CAN_TxDat, 0, sizeof(CAN_TxDat));
 		convertFloatsToCANData(
 			my_analog_inputs.Power_Voltage.Current_Val,
 			my_analog_inputs.Hydrogen_Cylinder_Pressure.Current_Val,
@@ -626,6 +626,7 @@ __weak void RtosCallback01(void const * argument)
 			my_analog_inputs.FC_External_Temperature.Current_Val,
 			CAN_TxDat);
 		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x123);
+		osDelay(1);
 		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 		convertFloatsToCANData(
 			my_analog_inputs.Shunt_A_Current.Current_Val,
@@ -634,6 +635,7 @@ __weak void RtosCallback01(void const * argument)
 			my_analog_inputs.Shunt_B_Voltage.Current_Val,
 			CAN_TxDat);
 		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x124);
+		osDelay(1);
 		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 		convertFloatsToCANData(
 			my_analog_inputs.Shunt_A_Power.Current_Val,
@@ -642,39 +644,40 @@ __weak void RtosCallback01(void const * argument)
 			my_analog_inputs.Shunt_B_Total_Energy.Current_Val,
 			CAN_TxDat);
 		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x125);
+		osDelay(1);
 		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
 	}
-	if(Sys_flags.states_trans_enable){
-		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
-		CAN_TxDat[0] = 	(uint8_t)(Sys_flags.device_paused) +
-						(uint8_t)(Sys_flags.device_started)<<1 +
-						(uint8_t)(Sys_flags.device_stopped)<<2 +
-						(uint8_t)(Sys_flags.device_error)<<3 +
-						(uint8_t)(Sys_flags.device_fault)<<4 +
-						(uint8_t)(Sys_flags.host_command_enable)<<5 +
-						(uint8_t)(Sys_flags.sensor_trans_enable)<<6 +
-						(uint8_t)(Sys_flags.states_trans_enable)<<7;
+	if(Sys_flags.states_trans_enable == true){
+		 memset(CAN_TxDat, 0, sizeof(CAN_TxDat));
+		 CAN_TxDat[0] = (uint8_t)(Sys_flags.device_paused) +
+		 				(uint8_t)(Sys_flags.device_started<<1) +
+		 				(uint8_t)(Sys_flags.device_stopped<<2) +
+		 				(uint8_t)(Sys_flags.device_error<<3) +
+		 				(uint8_t)(Sys_flags.device_fault<<4) +
+		 				(uint8_t)(Sys_flags.host_command_enable<<5) +
+		 				(uint8_t)(Sys_flags.sensor_trans_enable<<6) +
+		 				(uint8_t)(Sys_flags.states_trans_enable<<7);
 
-		CAN_TxDat[1] = 	(uint8_t)(sysControl.Expected_FC_Fan_Enable) +
-						(uint8_t)(sysControl.Expected_DCDC_Enable)<<1 +
-						(uint8_t)(sysControl.Expected_Heatsink_Fan_Enable)<<2 +
-						(uint8_t)(sysControl.Expected_Hydrogen_Inlet_Valve_Enable)<<3 +
-						(uint8_t)(sysControl.Expected_Hydrogen_Exhaust_Valve_Enable)<<4 +
-						(uint8_t)(sysControl.Expected_Contactor_Fc_Enable)<<5 +
-						(uint8_t)(sysControl.Expected_Contactor_Load_Enable)<<6;
+		 CAN_TxDat[1] = (uint8_t)(sysControl.Expected_FC_Fan_Enable) +
+		 				(uint8_t)(sysControl.Expected_DCDC_Enable<<1) +
+		 				(uint8_t)(sysControl.Expected_Heatsink_Fan_Enable<<2) +
+		 				(uint8_t)(sysControl.Expected_Hydrogen_Inlet_Valve_Enable<<3) +
+		 				(uint8_t)(sysControl.Expected_Hydrogen_Exhaust_Valve_Enable<<4) +
+		 				(uint8_t)(sysControl.Expected_Contactor_Fc_Enable<<5) +
+		 				(uint8_t)(sysControl.Expected_Contactor_Load_Enable<<6);
 
-		CAN_TxDat[2] = 	(uint8_t)(sysControl.Exhaust_Peried>>8);
-		CAN_TxDat[3] =  (uint8_t)(sysControl.Exhaust_Peried);
+		 CAN_TxDat[2] = (uint8_t)(sysControl.Exhaust_Peried>>8);
+		 CAN_TxDat[3] = (uint8_t)(sysControl.Exhaust_Peried);
 
-		CAN_TxDat[4] = 	(uint8_t)(sysControl.Exhaust_Time>>8);
-		CAN_TxDat[5] =  (uint8_t)(sysControl.Exhaust_Time);
+		 CAN_TxDat[4] = (uint8_t)(sysControl.Exhaust_Time>>8);
+		 CAN_TxDat[5] = (uint8_t)(sysControl.Exhaust_Time);
 
-		uint16_t tmp =  (uint16_t)(sysControl.Temperature_reference*10);
-		CAN_TxDat[6] =  (uint8_t)(tmp>>2);
-		CAN_TxDat[7] =  (uint8_t)(sysControl.Expected_FC_Fan_Speed<<2) + 
-						(uint8_t)(tmp&0x0003);
-		FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x122);
-		memset(CAN_TxDat, 0, sizeof(CAN_TxDat)); 
+		 uint16_t tmp = (uint16_t)(sysControl.Temperature_reference*10);
+		 CAN_TxDat[6] = (uint8_t)(tmp>>2);
+		 CAN_TxDat[7] = (uint8_t)(sysControl.Expected_FC_Fan_Speed<<2) +
+		 				(uint8_t)(tmp&0x0003);
+		 FDCAN1_Send_Msg(CAN_TxDat, FDCAN_DLC_BYTES_8, 0x122);
+		 memset(CAN_TxDat, 0, sizeof(CAN_TxDat));
 	}
   /* USER CODE END RtosCallback01 */
 }

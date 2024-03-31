@@ -327,7 +327,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         if (CAN_RxID_Buffer == 0x458){
             memcpy(CAN_RxDat, CAN_RxDat_Buffer, 8);
             // [1,0]
-            sysControl.max_efficiency_power = (uint16_t)CAN_RxDat[1]<<8 + CAN_RxDat[0];
+            sysControl.max_efficiency_power = (uint16_t)CAN_RxDat[0]<<8 + CAN_RxDat[1];
             // [3,2]
            
             // [5,4]
